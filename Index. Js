@@ -1,0 +1,44 @@
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+// Listahan ng mga active users
+const activeUsers = new Map();
+
+// Endpoint para sa ping
+// Tatawagin ng Roblox script kada 15 seconds
+app.post('/ping', (req, res) => {
+const { Player, UserId } = req.body;
+
+if (UserId) {
+    activeUsers.set(UserId, {
+        name: Player,
+        time: Date.now()
+    });
+}
+
+res.sendStatus(200);
+
+});
+
+// Endpoint para makuha ang total count
+// Tatanggalin ang inactive users pagkalipas ng 30 seconds
+app.get('/count', (req, res) => {
+const now = Date.now();
+
+for (const [id, data] of activeUsers.entries()) {
+    if (now - data.time > 30000) {
+        activeUsers.delete(id);
+    }
+}
+
+res.json({ count: activeUsers.size });
+
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+console.log("Server is running on port ${PORT}");
+});
